@@ -1,0 +1,54 @@
+---
+title: "JHDS DDP Assignment"
+author: "Ben de Haan"
+date: "7/21/2021"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(ggcorrplot)
+library(caret)
+library(randomForest)
+library(psych)
+```
+
+## Ozone concentration 
+
+Given the [air quality dataset](http://127.0.0.1:28158/help/library/datasets/html/airquality.html), I'll try to predict the amount of Ozone (in parts per billion) using a random forest. The user can generate predictions with this dataset using the interactive shiny application. Since the model is trained on application start, the initial loading may take some time. The shiny app can be found [here](https://benn001.shinyapps.io/jhds-assignment/).
+
+## Exploratory plot
+
+Looking at the pairs plot, Ozone seams negatively correlated with the wind, and positively with the temperature. Solar Radiation also seems somewhat positively correlated.
+
+```{r pressure, echo=FALSE}
+pairs.panels(airquality, 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             )
+```
+
+## Training the model
+
+The model is built using all variables in the dataset. Since it is rather small, let's use the bootstrapping method in train control. Looking at the feature importance, it seems our original exploratory data analysis matches.
+
+```{r model training, echo = TRUE}
+trc <- trainControl(method="boot")
+rf <- train(Ozone~., data=na.omit(airquality), method='rf', 
+            metric="RMSE", trControl=trc)
+importance(rf$finalModel)
+```
+
+## Example prediction
+
+Let's try predicting something for the median values of all parameters.
+
+```{r prediction}
+df <- data.frame(median(na.omit(airquality$Solar.R)), 
+                 median(airquality$Wind), median(airquality$Temp), 
+                 median(airquality$Month), median(airquality$Day))
+colnames(df) <- c('Solar.R', 'Wind', 'Temp', 'Month', 'Day')
+predict(rf, df)
+```

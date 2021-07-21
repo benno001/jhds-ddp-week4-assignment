@@ -9,12 +9,12 @@
 # Created by Ben de Haan
 
 library(shiny)
-library(caret)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
     
-    
+    library(caret)
+    library(randomForest)
     trc <- trainControl(method="boot")
     
     rf <- train(Ozone~., 
